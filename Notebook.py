@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 
 
 def read_from_db() -> list:
@@ -10,26 +11,38 @@ class Notebook:
     def __init__(self):
         self._notes = read_from_db()
 
-    def add_notes(self, note):
+    def add_note(self, note):
         self._notes.append(note)
 
     def remove_note(self, note):
+        if not isinstance(note, Note):
+            print(f'{note} is not an instance of Note')
         try:
             self._notes.remove(note)
         except ValueError:
             print(f'{note} is not in the list')
+        else:
+            print(f'succeed removing {note} from notebook')
 
-    def display_notes(self):
-        print(self._notes)
+    def remove_note_by_id(self, id):
+        for note in self._notes:
+            if note.id == id:
+                self._notes.remove(note)
+                return
+        print(f'{id} did not match any note')
+
+    def get_notes(self):
+        return self._notes
 
 
 class Note:
-    max_length = 5
+    max_length = 125
 
     def __init__(self, title, text='', is_favorite=False):
         assert len(text) < self.max_length, (
             f"The length of the text must be less than {self.max_length}")
 
+        self.id = uuid.uuid4()
         self.title = title
         self.text = text
         self.is_favorite = is_favorite
