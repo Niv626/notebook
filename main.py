@@ -2,6 +2,9 @@ from Notebook import Notebook, Note
 from Attachment import Audio, Image
 import tkinter as tk
 from tkinter import ttk, filedialog
+from PIL import Image as pImage
+from formats import image_prefix, audio_prefix
+import librosa
 
 media_file = None
 
@@ -17,8 +20,12 @@ def submit():
 
 
 def insert_node(note):
-    treeview.insert("", 0, note.id, values=(note.title, note.text,
-                                            note.is_favorite, note.created_at, note.get_attachments_attar()))
+    if note.get_attachments_attar():
+        treeview.insert("", 0, note.id, values=(note.title, note.text, note.is_favorite, note.created_at,
+                                                note.get_attachments_path()))
+    else:
+        treeview.insert("", 0, note.id, values=(note.title, note.text, note.is_favorite, note.created_at, ""))
+
 
 # def display():
 #     listbox.delete(0, 'end')  # clear textbox
@@ -44,8 +51,19 @@ def delete_all_notes(is_filter=True):  # clear all notes from tree view
 
 
 def delete():
-    if elected_item := treeview.selection()[0]:
-        treeview.delete(elected_item)
+    selected_item = treeview.selection()
+    if selected_item:
+        treeview.delete(selected_item[0])
+
+
+def show_media():
+    selected_item = treeview.selection()
+    if selected_item:
+        try:
+            with pImage.open(treeview.item(selected_item)['values'][4]) as im:
+                im.show()
+        except Exception as e:
+            print(e)
 
 
 def filter_by():
@@ -66,7 +84,11 @@ def upload_file():
     global media_file
     try:
         filename = filedialog.askopenfilename()
-        media_file = Image(filename, 423, '4x5')
+        format_file_name = filename.split('/')[-1].lower()
+        if format_file_name.endswith(image_prefix):
+            media_file = Image(filename, 423, '4x5')
+        elif format_file_name.endswith(audio_prefix):
+            media_file = Audio(filename, 423, '4x5')
     except Exception as e:
         print(e)
 
@@ -77,7 +99,7 @@ if __name__ == "__main__":
     notebook = Notebook()
     font = ('calibre', 10, 'bold')
     root = tk.Tk()
-    root.geometry("1200x1000")
+    root.geometry("1700x2000")
 
     title_input = tk.StringVar()
     v = tk.IntVar()
@@ -124,6 +146,8 @@ if __name__ == "__main__":
 
     btn_del = tk.Button(root, text="Delete selected note", command=delete).grid(row=8)
     btn_del_all = tk.Button(root, text="Delete all notes", command=delete_all_notes).grid(row=9)
+
+    btn_display_media = tk.Button(root, text="show media", command=show_media).grid(row=12)
 
     upload_file_btn = tk.Button(root, text='Upload image/audio', command=upload_file).grid(row=4)
 

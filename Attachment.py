@@ -7,14 +7,17 @@ class Attachment:
     def __init__(self, path, size):
         assert size < self.max_size, f"The length of the file must be less than {self.max_size}"
         self.path = path
-        self.file_format = self.is_supported()
+        self.file_format = self.file_format()
         self.size = size
 
-    def is_supported(self):
+    def file_format(self):
         formatted = self.path.split('/')[-1]
         if not formatted.lower().endswith(image_prefix + audio_prefix):
             raise ValueError(f"file type {formatted} is not supported.\n "
                              f"supported format: {image_prefix + audio_prefix}")
+        return formatted
+
+
 
     def display_media(self):
         pass

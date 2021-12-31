@@ -61,5 +61,8 @@ class Note:
     def get_attachments_attar(self):
         return [attachment.__dict__ for attachment in self._attachments]
 
+    def get_attachments_path(self):
+        return self.get_attachments_attar()[0].get('path')
+
     def remove_attachment(self, attachment):
         self.notes.remove(attachment)
