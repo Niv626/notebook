@@ -1,47 +1,38 @@
 from Notebook import Notebook, Note
-from Attachment import Audio, Image
+from Attachment import Audio, Image as c_Image
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image as pImage
 from formats import image_prefix, audio_prefix
-import librosa
+import wave
+import contextlib
+import os
+from play_audio import run
+from playsound import playsound
 
 media_file = None
 
 
 def submit():
+    global media_file
     note = Note(title_input.get(), text_entry.get("1.0", "end-1c"), v.get().__bool__())
     if media_file:
         note.add_attachment(media_file)
     notebook.add_note(note)
     insert_node(note)
     title_input.set('')
+    media_file = None
     text_entry.delete("1.0", "end-1c")
 
 
 def insert_node(note):
     if note.get_attachments_attar():
-        treeview.insert("", 0, note.id, values=(note.title, note.text, note.is_favorite, note.created_at,
-                                                note.get_attachments_path()))
+        treeview.insert("", 0, note.get_id(), values=(note.title, note.text, note.is_favorite,
+                                                      note.created_at, note.get_attachments_path()))
     else:
-        treeview.insert("", 0, note.id, values=(note.title, note.text, note.is_favorite, note.created_at, ""))
+        treeview.insert("", 0, note.get_id(), values=(note.title, note.text, note.is_favorite,
+                                                      note.created_at, ""))
 
-
-# def display():
-#     listbox.delete(0, 'end')  # clear textbox
-#     for note in notebook.get_notes():
-#         listbox.insert("end", f'title: {note.__dict__.get("title")}  '
-#                               f'text: {note.__dict__.get("text")}  '
-#                               f'uuid: {note.__dict__.get("id")}')
-
-
-# def call_back(event):
-#     selection = event.widget.curselection()
-#     if selection:
-#         index = selection[0]
-#         data = event.widget.get(index)
-#     else:
-#         pass
 
 def delete_all_notes(is_filter=True):  # clear all notes from tree view
     for row in treeview.get_children():
@@ -56,12 +47,19 @@ def delete():
         treeview.delete(selected_item[0])
 
 
-def show_media():
+def play_media():
     selected_item = treeview.selection()
     if selected_item:
         try:
-            with pImage.open(treeview.item(selected_item)['values'][4]) as im:
-                im.show()
+            path = treeview.item(selected_item).get('values')[-1]
+            if formatted_file(path).endswith(image_prefix):
+                with pImage.open(path) as im:
+                    im.show()
+            elif formatted_file(path).endswith(audio_prefix):
+                run(path)
+            else:
+                print('select note first')
+
         except Exception as e:
             print(e)
 
@@ -79,16 +77,25 @@ def display_notebook():
         insert_node(note)
 
 
+def get_file_size(path):  # TODO: Add option to get size from path in Attachment object
+    return os.path.getsize(path)
+
+
+def formatted_file(path):
+    return path.split('/')[-1].lower()
+
+
 def upload_file():
-    # selected_item = treeview.selection()[0]  # get selected item
     global media_file
     try:
-        filename = filedialog.askopenfilename()
-        format_file_name = filename.split('/')[-1].lower()
-        if format_file_name.endswith(image_prefix):
-            media_file = Image(filename, 423, '4x5')
-        elif format_file_name.endswith(audio_prefix):
-            media_file = Audio(filename, 423, '4x5')
+        path = filedialog.askopenfilename()
+        formatted_file_name = formatted_file(path)
+        file_size = get_file_size(path)
+
+        if formatted_file_name.endswith(image_prefix):
+            media_file = c_Image(path)
+        elif formatted_file_name.endswith(audio_prefix):
+            media_file = Audio(path, file_size)
     except Exception as e:
         print(e)
 
@@ -147,10 +154,8 @@ if __name__ == "__main__":
     btn_del = tk.Button(root, text="Delete selected note", command=delete).grid(row=8)
     btn_del_all = tk.Button(root, text="Delete all notes", command=delete_all_notes).grid(row=9)
 
-    btn_display_media = tk.Button(root, text="show media", command=show_media).grid(row=12)
+    btn_display_media = tk.Button(root, text="play media", command=play_media).grid(row=12)
 
     upload_file_btn = tk.Button(root, text='Upload image/audio', command=upload_file).grid(row=4)
 
     root.mainloop()
-
-
