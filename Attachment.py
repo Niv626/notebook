@@ -1,7 +1,7 @@
 from formats import image_prefix, audio_prefix
 from PIL import Image as pImage
 from setup_logger import logger
-import playsound
+from  playsound import playsound
 import datetime
 import wave
 import contextlib
@@ -59,7 +59,7 @@ class Audio(Attachment):
 
     def validate_duration(self, duration):
         if not duration:
-            duration = self.get_duration_from_path(duration)
+            duration = self.get_duration_from_path()
         if not self.min_duration < duration < self.max_duration:
             raise Exception(f"duration must be smaller than {self.max_duration}"
                             f" or bigger than {self.min_duration}")
@@ -80,7 +80,7 @@ class Audio(Attachment):
 
     def play_media(self):
         try:
-            playsound(self.path)
+            p = playsound(self.path)
         except Exception as e:
             print(f'Exception info {e} \n It may caused by invalid path')
 

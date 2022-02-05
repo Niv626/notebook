@@ -4,11 +4,10 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image as pImage
 from formats import image_prefix, audio_prefix
-import wave
-import contextlib
 import os
 from play_audio import run
-from playsound import playsound
+from tkinter.messagebox import showinfo
+
 
 media_file = None
 
@@ -56,6 +55,7 @@ def play_media():
                 with pImage.open(path) as im:
                     im.show()
             elif formatted_file(path).endswith(audio_prefix):
+                popup_showinfo()
                 run(path)
             else:
                 print('select note first')
@@ -77,7 +77,7 @@ def display_notebook():
         insert_node(note)
 
 
-def get_file_size(path):  # TODO: Add option to get size from path in Attachment object
+def get_file_size(path):  
     return os.path.getsize(path)
 
 
@@ -98,6 +98,10 @@ def upload_file():
             media_file = Audio(path, file_size)
     except Exception as e:
         print(e)
+
+
+def popup_showinfo():
+    showinfo("Help", "space to pause, esc to exit")
 
 
 if __name__ == "__main__":
